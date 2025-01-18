@@ -1,5 +1,10 @@
 const { Connection, PublicKey, ParsedTransactionWithMeta } = require('@solana/web3.js');
 const { Metaplex } = require('@metaplex-foundation/js')
+const axios = require('axios');
+require('dotenv').config();
+
+const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
 const connection = new Connection('https://api.mainnet-beta.solana.com', 'confirmed');
 const metaplex = Metaplex.make(connection);
@@ -11,7 +16,21 @@ const RESET = '\x1b[0m';
 
 function now() {
   const timestamp = new Date().toISOString().replace('T', ' ').replace('Z', '').replace(/\.\d{3}/, '');
-  return `[${YELLOW}${timestamp}${RESET}]`
+  return `⏰ ${timestamp}`
+}
+
+async function sendMessage(text) {
+  try {
+    await axios.get(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      params: {
+        chat_id: CHAT_ID,
+        text,
+        parse_mode: 'HTML'
+      }
+    });
+  } catch (error) {
+    console.error('Telegram error:', error.message);
+  }
 }
 
 /** @param {ParsedTransactionWithMeta} tx */
@@ -23,6 +42,12 @@ async function processParsedTransaction(tx) {
   metaplex.nfts().findByMint({ mintAddress: tokenMint })
     .then((metadata) => {
       console.log(`${now()} Name: ${GREEN}${metadata.json.name}${RESET}, Symbol: ${GREEN}${metadata.json.symbol}${RESET}`)
+      const tokenAddress = tokenMint.toString()
+      sendMessage(
+        `${now()}\n` +
+        `🟩 Token address: <a href="https://solscan.io/token/${tokenAddress}">${tokenAddress}</a>\n` +
+        `🟦 Name: ${metadata.json.name}, Symbol: ${metadata.json.symbol}`
+      )
     })
     .catch((error) => {
       console.error(`${now()} ${RED}Error fetching metadata${RESET}: ${error}`)
@@ -30,10 +55,7 @@ async function processParsedTransaction(tx) {
 }
 
 async function monitorTransfers(addressToMonitor) {
-  // Connect to Solana network (mainnet-beta)
   const pubKey = new PublicKey(addressToMonitor);
-
-  // Subscribe to all transactions for the address
   console.log(`Start monitoring address: ${addressToMonitor}`);
 
   connection.onLogs(
@@ -47,6 +69,12 @@ async function monitorTransfers(addressToMonitor) {
         console.log(`${now()}   Signature: ${signature}`);
         console.log(`${now()}   Explorer Link: https://solscan.io/tx/${signature}`);
 
+        sendMessage(
+          `${now()}\n` +
+          `✅ Pump emission 🚀 event detected!\n` +
+          `🔗 Explorer Link: https://solscan.io/tx/${signature}`
+        )
+
         connection.getParsedTransaction(signature, {
           maxSupportedTransactionVersion: 0,
           commitment: 'confirmed'
@@ -55,6 +83,10 @@ async function monitorTransfers(addressToMonitor) {
         });
       } else {
         console.log(`${now()} 🗒️  Not pump emission tx: https://solscan.io/tx/${signature}`)
+        sendMessage(
+          `${now()}\n` +
+          `🗒️ Not pump emission tx: https://solscan.io/tx/${signature}`
+        )
       }
     },
     'confirmed'
