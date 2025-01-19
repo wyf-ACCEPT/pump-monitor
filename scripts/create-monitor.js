@@ -11,10 +11,10 @@ const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 const TARGET_SYMBOL = "ai3"
 
 const connection = new Connection(
-  process.env.SOLANA_RPC, { 
-    commitment: 'confirmed',
-    wsEndpoint: process.env.SOLANA_RPC_WSS
-  }
+  process.env.SOLANA_RPC, {
+  commitment: 'confirmed',
+  wsEndpoint: process.env.SOLANA_RPC_WSS
+}
 );
 const metaplex = Metaplex.make(connection);
 
@@ -62,8 +62,12 @@ async function getTransaction(signature, retryCount = 0) {
 
     if (!tx || !tx.transaction) {
       if (retryCount < 10) {
-        console.log(`${consoleNow()} Transaction not found, retrying in 3s... (attempt ${retryCount + 1})`);
-        await new Promise(resolve => setTimeout(resolve, 3000));
+        console.log(`${consoleNow()} Transaction not found, retrying in 5s... (attempt ${retryCount + 1})`);
+        await new Promise(resolve => setTimeout(resolve, 5000));
+        return getTransaction(signature, retryCount + 1);
+      } else if (retryCount < 13) {
+        console.log(`${consoleNow()} Transaction not found, retrying in 60s... (attempt ${retryCount + 1})`);
+        await new Promise(resolve => setTimeout(resolve, 60000));
         return getTransaction(signature, retryCount + 1);
       } else {
         console.error(`${consoleNow()} Failed to get transaction after ${retryCount} attempts`);
@@ -89,17 +93,17 @@ async function processParsedTransaction(tx) {
 
   metaplex.nfts().findByMint({ mintAddress: tokenMint })
     .then((metadata) => {
-      console.log(`${consoleNow()} Name: "${metadata.json.name}", Symbol: "${metadata.json.symbol}"`)
-      const tokenAddress = tokenMint.toString()
-      sendMessage(
-        `⏰ ${now()}\n` +
-        `🟦 New token: <a href="https://gmgn.ai/sol/token/${tokenAddress}">${metadata.json.name}</a> (${metadata.json.symbol})\n`
-      )
       if (metadata.json.name.toLowerCase().includes(TARGET_SYMBOL) || metadata.json.symbol.toLowerCase().includes(TARGET_SYMBOL)) {
+        const tokenAddress = tokenMint.toString()
+        console.log(`${consoleNow()} Name: "${metadata.json.name}", Symbol: "${metadata.json.symbol}"`)
+        sendMessage(
+          `⏰ ${now()}\n` +
+          `🟦 New token: <a href="https://gmgn.ai/sol/token/${tokenAddress}">${metadata.json.name}</a> (${metadata.json.symbol})\n`
+        )
         for (let i = 0; i < 5; i++) {
           sendMessage(
             `⏰ ${now()}\n` +
-            `🟥 Strong alert! ${metadata.json.symbol} (${metadata.json.name}) is pumpable!`
+            `🟥 Strong alert! "${metadata.json.symbol}" ("${metadata.json.name}") is issued!`
           )
         }
       }
@@ -124,7 +128,15 @@ async function monitorCreate(addressToMonitor) {
         console.log(`${consoleNow()}   Signature: ${signature}`);
         console.log(`${consoleNow()}   Explorer Link: https://solscan.io/tx/${signature}`);
         getTransaction(signature).then((tx) => {
-          processParsedTransaction(tx)
+          if (tx) {
+            processParsedTransaction(tx)
+          } else {
+            sendMessage(
+              `⏰ ${now()}\n` + 
+              `🟥 Failed to get <a href="https://solscan.io/tx/${signature}">transaction</a> after 13 attempts.` +
+              `Please check the transaction manually.`
+            );
+          }
         });
       }
     },
@@ -133,6 +145,14 @@ async function monitorCreate(addressToMonitor) {
 }
 
 async function main() {
+  setInterval(() => {
+    console.log(`${consoleNow()} ✅ [TARGET FOR ${TARGET_SYMBOL}] Server still running.`)
+    sendMessage(
+      `⏰ ${now()}\n` +
+      `⬜️ [TARGET FOR ${TARGET_SYMBOL}] Server still running.`
+    )
+  }, 60 * 60 * 1000) // 1 hour
+
   try {
     // Address to monitor
     await monitorCreate(PUMP_FUN);

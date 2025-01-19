@@ -151,7 +151,7 @@ async function main() {
     console.log(`${consoleNow()} ✅ [TARGET FOR ${TARGET_SYMBOL}] Server still running.`)
     sendMessage(
       `⏰ ${now()}\n` +
-      `✅ [TARGET FOR ${TARGET_SYMBOL}] Server still running.`
+      `⬜️ [TARGET FOR ${TARGET_SYMBOL}] Server still running.`
     )
   }, 60 * 60 * 1000) // 1 hour
 
