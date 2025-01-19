@@ -3,9 +3,9 @@ const { Metaplex } = require('@metaplex-foundation/js')
 const axios = require('axios');
 require('dotenv').config();
 
-const PUMP_MIGRATION = "39azUYFWPz3VHgKCf3VChUwbpURdCHRxjWVowf5jUJjg"
+const PUMP_FUN = "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P"
 
-const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN_CREATION;
 const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
 const TARGET_SYMBOL = "ai3"
@@ -83,7 +83,8 @@ async function getTransaction(signature, retryCount = 0) {
 /** @param {ParsedTransactionWithMeta} tx */
 async function processParsedTransaction(tx) {
   /** @type {PublicKey} **/
-  const tokenMint = tx.transaction.message.instructions[2].accounts[9]
+  const tokenMint = tx.transaction.message.instructions
+    .filter(x => x.programId.toString() == PUMP_FUN)[0].accounts[0]
   console.log(`${consoleNow()} Token pubkey: ${tokenMint.toString()}`);
 
   metaplex.nfts().findByMint({ mintAddress: tokenMint })
@@ -92,8 +93,7 @@ async function processParsedTransaction(tx) {
       const tokenAddress = tokenMint.toString()
       sendMessage(
         `⏰ ${now()}\n` +
-        `🟦 Name: ${metadata.json.name}, Symbol: ${metadata.json.symbol}\n` + 
-        `🟩 Token address: <a href="https://gmgn.ai/sol/token/${tokenAddress}">${tokenAddress}</a>`
+        `🟦 New token: <a href="https://gmgn.ai/sol/token/${tokenAddress}">${metadata.json.name}</a> (${metadata.json.symbol})\n`
       )
       if (metadata.json.name.toLowerCase().includes(TARGET_SYMBOL) || metadata.json.symbol.toLowerCase().includes(TARGET_SYMBOL)) {
         for (let i = 0; i < 5; i++) {
@@ -109,7 +109,7 @@ async function processParsedTransaction(tx) {
     })
 }
 
-async function monitorTransfers(addressToMonitor) {
+async function monitorCreate(addressToMonitor) {
   const pubKey = new PublicKey(addressToMonitor);
   console.log(`${consoleNow()} Start monitoring address: ${addressToMonitor}`);
 
@@ -119,45 +119,23 @@ async function monitorTransfers(addressToMonitor) {
       const signature = logs.signature
 
       // Check if logs contain transfer-related events
-      if (logs.logs.some(log => log.includes('InitializeInstruction2'))) {
-        console.log(`${consoleNow()} ✅ Pump emission 🚀 event detected!`);
+      if (logs.logs.some(log => log == 'Program log: Instruction: Create')) {
+        console.log(`\n${consoleNow()} ✅ Pump creation 📨 event detected!`);
         console.log(`${consoleNow()}   Signature: ${signature}`);
         console.log(`${consoleNow()}   Explorer Link: https://solscan.io/tx/${signature}`);
-        sendMessage(
-          `⏰ ${now()}\n` +
-          `✅ Pump emission 🚀 event detected!\n` +
-          `🔗 Solscan <a href="https://solscan.io/tx/${signature}">Link</a>`
-        )
         getTransaction(signature).then((tx) => {
           processParsedTransaction(tx)
         });
-
-      } else {
-        console.log(`${consoleNow()} 🗒️  Not pump emission tx: https://solscan.io/tx/${signature}`)
       }
     },
-    'confirmed'
+    'confirmed',
   );
 }
 
 async function main() {
-
-  connection.getParsedTransaction("2pZ2dMTu2nwGFCzofQex7kT4hKYhG9eJAqFGM3NPJaZZ4tGhi3p8QaH51kQifDbUrowQYAkfS5D8LzGTBGvMD9uX", {
-    maxSupportedTransactionVersion: 0,
-    commitment: 'confirmed'
-  }).then((tx) => processParsedTransaction(tx))
-
-  setInterval(() => {
-    console.log(`${consoleNow()} ✅ [TARGET FOR ${TARGET_SYMBOL}] Server still running.`)
-    sendMessage(
-      `⏰ ${now()}\n` +
-      `✅ [TARGET FOR ${TARGET_SYMBOL}] Server still running.`
-    )
-  }, 60 * 60 * 1000) // 1 hour
-
   try {
     // Address to monitor
-    await monitorTransfers(PUMP_MIGRATION);
+    await monitorCreate(PUMP_FUN);
 
     // Keep the process running
     process.on('SIGINT', () => {
