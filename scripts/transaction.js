@@ -1,9 +1,10 @@
 const { Connection, PublicKey } = require('@solana/web3.js');
 const { Metaplex } = require('@metaplex-foundation/js')
+require('dotenv').config()
 
 async function getTransactionDetails(signature) {
   // Connect to Solana mainnet
-  const connection = new Connection('https://api.mainnet-beta.solana.com', 'confirmed');
+  const connection = new Connection(process.env.SOLANA_RPC, 'confirmed');
   const metaplex = Metaplex.make(connection);
 
   // Get parsed transaction details
@@ -11,6 +12,7 @@ async function getTransactionDetails(signature) {
     maxSupportedTransactionVersion: 0,
     commitment: 'confirmed'
   });
+  console.log(tx)
 
   /** @type {PublicKey} **/
   const tokenMint = tx.transaction.message.instructions[2].accounts[9]

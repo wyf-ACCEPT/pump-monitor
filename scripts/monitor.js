@@ -8,7 +8,7 @@ const PUMP_MIGRATION = "39azUYFWPz3VHgKCf3VChUwbpURdCHRxjWVowf5jUJjg"
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
-const TARGET_SYMBOL = "ai3"
+const TARGET_SYMBOL = "argo"
 
 const connection = new Connection(
   process.env.SOLANA_RPC, { 
@@ -17,11 +17,6 @@ const connection = new Connection(
   }
 );
 const metaplex = Metaplex.make(connection);
-
-const YELLOW = '\x1b[33m';
-const GREEN = '\x1b[32m';
-const RED = '\x1b[31m';
-const RESET = '\x1b[0m';
 
 function now() {
   const date = new Date()
@@ -148,10 +143,10 @@ async function main() {
   }).then((tx) => processParsedTransaction(tx))
 
   setInterval(() => {
-    console.log(`${consoleNow()} ✅ [TARGET FOR ${TARGET_SYMBOL}] Server still running.`)
+    console.log(`${consoleNow()} ⬜️ Server still running.`)
     sendMessage(
       `⏰ ${now()}\n` +
-      `⬜️ [TARGET FOR ${TARGET_SYMBOL}] Server still running.`
+      `⬜️ Server still running.`
     )
   }, 60 * 60 * 1000) // 1 hour
 

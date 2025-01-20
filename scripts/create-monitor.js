@@ -8,7 +8,7 @@ const PUMP_FUN = "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P"
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN_CREATION;
 const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
-const TARGET_SYMBOL = "ai3"
+const TARGET_SYMBOL = "arg"
 
 const connection = new Connection(
   process.env.SOLANA_RPC, {
@@ -17,11 +17,6 @@ const connection = new Connection(
 }
 );
 const metaplex = Metaplex.make(connection);
-
-const YELLOW = '\x1b[33m';
-const GREEN = '\x1b[32m';
-const RED = '\x1b[31m';
-const RESET = '\x1b[0m';
 
 function now() {
   const date = new Date()
@@ -133,7 +128,7 @@ async function monitorCreate(addressToMonitor) {
           } else {
             sendMessage(
               `⏰ ${now()}\n` + 
-              `🟥 Failed to get <a href="https://solscan.io/tx/${signature}">transaction</a> after 13 attempts.` +
+              `📴 Failed to get <a href="https://solscan.io/tx/${signature}">transaction</a> after 13 attempts.` +
               `Please check the transaction manually.`
             );
           }
@@ -146,10 +141,10 @@ async function monitorCreate(addressToMonitor) {
 
 async function main() {
   setInterval(() => {
-    console.log(`${consoleNow()} ✅ [TARGET FOR ${TARGET_SYMBOL}] Server still running.`)
+    console.log(`${consoleNow()} ⬜️ Server still running.`)
     sendMessage(
       `⏰ ${now()}\n` +
-      `⬜️ [TARGET FOR ${TARGET_SYMBOL}] Server still running.`
+      `⬜️ Server still running.`
     )
   }, 60 * 60 * 1000) // 1 hour
 
