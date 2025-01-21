@@ -58,15 +58,13 @@ async function getTransaction(signature, retryCount = 0) {
     if (!tx || !tx.transaction) {
       if (retryCount < 10) {
         console.log(`${consoleNow()} Transaction not found, retrying in 5s... (attempt ${retryCount + 1})`);
-        await new Promise(resolve => setTimeout(resolve, 5000));
+        await new Promise(resolve => setTimeout(resolve, 5000 + Math.random() * 1000));
         return getTransaction(signature, retryCount + 1);
       } else if (retryCount < 13) {
         console.log(`${consoleNow()} Transaction not found, retrying in 60s... (attempt ${retryCount + 1})`);
-        await new Promise(resolve => setTimeout(resolve, 60000));
+        await new Promise(resolve => setTimeout(resolve, 60000 + Math.random() * 10000));
         return getTransaction(signature, retryCount + 1);
       } else {
-        console.error(`${consoleNow()} Failed to get transaction after ${retryCount} attempts`);
-        sendMessage(`⏰ ${now()} Failed to get transaction after ${retryCount} attempts`);
         return null;
       }
     }
@@ -91,14 +89,11 @@ async function processParsedTransaction(tx) {
       if (metadata.json.name.toLowerCase().includes(TARGET_SYMBOL) || metadata.json.symbol.toLowerCase().includes(TARGET_SYMBOL)) {
         const tokenAddress = tokenMint.toString()
         console.log(`${consoleNow()} Name: "${metadata.json.name}", Symbol: "${metadata.json.symbol}"`)
-        sendMessage(
-          `⏰ ${now()}\n` +
-          `🟦 New token: <a href="https://gmgn.ai/sol/token/${tokenAddress}">${metadata.json.name}</a> (${metadata.json.symbol})\n`
-        )
         for (let i = 0; i < 5; i++) {
           sendMessage(
             `⏰ ${now()}\n` +
-            `🟥 Strong alert! "${metadata.json.symbol}" ("${metadata.json.name}") is issued!`
+            `🟥🟥 Strong alert! "${metadata.json.symbol}" ("${metadata.json.name}") is issued!\n` +
+            `🟥🟥 Token: <a href="https://gmgn.ai/sol/token/${tokenAddress}">${metadata.json.name}</a> (${metadata.json.symbol})\n`
           )
         }
       }
