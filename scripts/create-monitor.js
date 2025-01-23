@@ -7,6 +7,7 @@ const PUMP_FUN = "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P"
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN_CREATION;
 const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+const JUSTIN_CHAT_ID = process.env.JUSTIN_CHAT_ID;
 
 const TARGET_SYMBOL = "argo"
 
@@ -28,11 +29,11 @@ function consoleNow() {
   return `[${now()}]`
 }
 
-async function sendMessage(text) {
+async function sendMessage(text, chatId) {
   try {
     await axios.get(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
       params: {
-        chat_id: CHAT_ID,
+        chat_id: chatId,
         text,
         parse_mode: 'HTML'
       }
@@ -88,21 +89,23 @@ async function processParsedTransaction(tx) {
     .then((metadata) => {
 
       if (metadata.json.name.toLowerCase().includes('arg') || metadata.json.symbol.toLowerCase().includes('arg')) {
-        sendMessage(
+        const message = 
           `⏰ ${now()}\n` +
           `🟨 Weak alert: "${metadata.json.symbol}" ("${metadata.json.name}") is issued.\n` +
           `🟨 Token: <a href="https://gmgn.ai/sol/token/${tokenMint.toString()}">${metadata.json.name}</a> (${metadata.json.symbol})\n`
-        )
+        sendMessage(message, CHAT_ID);
+        sendMessage(message, JUSTIN_CHAT_ID);
       }
       if (metadata.json.name.toLowerCase().includes(TARGET_SYMBOL) || metadata.json.symbol.toLowerCase().includes(TARGET_SYMBOL)) {
         const tokenAddress = tokenMint.toString()
         console.log(`${consoleNow()} Name: "${metadata.json.name}", Symbol: "${metadata.json.symbol}"`)
         for (let i = 0; i < 5; i++) {
-          sendMessage(
+          const message = 
             `⏰ ${now()}\n` +
             `🟥🟥 Strong alert! "${metadata.json.symbol}" ("${metadata.json.name}") is issued!\n` +
             `🟥🟥 Token: <a href="https://gmgn.ai/sol/token/${tokenAddress}">${metadata.json.name}</a> (${metadata.json.symbol})\n`
-          )
+          sendMessage(message, CHAT_ID);
+          sendMessage(message, JUSTIN_CHAT_ID);
         }
       }
     })
@@ -129,11 +132,12 @@ async function monitorCreate(addressToMonitor) {
           if (tx) {
             processParsedTransaction(tx)
           } else {
-            sendMessage(
-              `⏰ ${now()}\n` + 
+            const message = 
+              `⏰ ${now()}\n` +
               `📴 Failed to get <a href="https://solscan.io/tx/${signature}">transaction</a> after 13 attempts.` +
               `Please check the transaction manually.`
-            );
+            sendMessage(message, CHAT_ID);
+            sendMessage(message, JUSTIN_CHAT_ID);
           }
         });
       }
@@ -145,10 +149,11 @@ async function monitorCreate(addressToMonitor) {
 async function main() {
   setInterval(() => {
     console.log(`${consoleNow()} ⬜️ Server still running.`)
-    sendMessage(
+    const message = 
       `⏰ ${now()}\n` +
       `⬜️ Server still running.`
-    )
+    sendMessage(message, CHAT_ID);
+    sendMessage(message, JUSTIN_CHAT_ID);
   }, 60 * 60 * 1000) // 1 hour
 
   try {

@@ -7,6 +7,7 @@ const PUMP_MIGRATION = "39azUYFWPz3VHgKCf3VChUwbpURdCHRxjWVowf5jUJjg"
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+const JUSTIN_CHAT_ID = process.env.JUSTIN_CHAT_ID;
 
 const TARGET_SYMBOL = "argo"
 
@@ -28,11 +29,11 @@ function consoleNow() {
   return `[${now()}]`
 }
 
-async function sendMessage(text) {
+async function sendMessage(text, chatId = CHAT_ID) {
   try {
     await axios.get(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
       params: {
-        chat_id: CHAT_ID,
+        chat_id: chatId,
         text,
         parse_mode: 'HTML'
       }
@@ -62,7 +63,9 @@ async function getTransaction(signature, retryCount = 0) {
         return getTransaction(signature, retryCount + 1);
       } else {
         console.error(`${consoleNow()} Failed to get transaction after ${retryCount} attempts`);
-        sendMessage(`⏰ ${now()} Failed to get transaction after ${retryCount} attempts`);
+        const message = `⏰ ${now()} Failed to get transaction after ${retryCount} attempts`;
+        sendMessage(message, CHAT_ID);
+        sendMessage(message, JUSTIN_CHAT_ID);
         return null;
       }
     }
@@ -86,19 +89,21 @@ async function processParsedTransaction(tx) {
       console.log(`${consoleNow()} Name: "${metadata.json.name}", Symbol: "${metadata.json.symbol}"`)
       const tokenAddress = tokenMint.toString()
       if (Math.random() < 0.01) {
-        sendMessage(
+        const message = 
           `⏰ ${now()}\n` +
           `🟦 Name: ${metadata.json.name}, Symbol: ${metadata.json.symbol}\n` +
           `🟩 Token address: <a href="https://gmgn.ai/sol/token/${tokenAddress}">${tokenAddress}</a>`
-        )
+        sendMessage(message, CHAT_ID);
+        sendMessage(message, JUSTIN_CHAT_ID);
       }
       if (metadata.json.name.toLowerCase().includes(TARGET_SYMBOL) || metadata.json.symbol.toLowerCase().includes(TARGET_SYMBOL)) {
         for (let i = 0; i < 5; i++) {
-          sendMessage(
+          const message = 
             `⏰ ${now()}\n` +
             `🟥 Strong alert! ${metadata.json.symbol} (${metadata.json.name}) is pumpable!\n` + 
             `🟥 Token address: <a href="https://gmgn.ai/sol/token/${tokenAddress}">${tokenAddress}</a>`
-          )
+          sendMessage(message, CHAT_ID);
+          sendMessage(message, JUSTIN_CHAT_ID);
         }
       }
     })
@@ -147,10 +152,11 @@ async function main() {
 
   setInterval(() => {
     console.log(`${consoleNow()} ⬜️ Server still running.`)
-    sendMessage(
+    const message = 
       `⏰ ${now()}\n` +
       `⬜️ Server still running.`
-    )
+    sendMessage(message, CHAT_ID);
+    sendMessage(message, JUSTIN_CHAT_ID);
   }, 60 * 60 * 1000) // 1 hour
 
   try {
