@@ -88,26 +88,39 @@ async function processParsedTransaction(tx) {
   metaplex.nfts().findByMint({ mintAddress: tokenMint })
     .then((metadata) => {
 
+      const tokenAddress = tokenMint.toString()
+      console.log(`${consoleNow()} Name: "${metadata.json.name}", Symbol: "${metadata.json.symbol}", Address: ${tokenAddress}`)
+
       if (metadata.json.name.toLowerCase().includes('arg') || metadata.json.symbol.toLowerCase().includes('arg')) {
         const message = 
           `⏰ ${now()}\n` +
           `🟨 Weak alert: "${metadata.json.symbol}" ("${metadata.json.name}") is issued.\n` +
-          `🟨 Token: <a href="https://gmgn.ai/sol/token/${tokenMint.toString()}">${metadata.json.name}</a> (${metadata.json.symbol})\n`
+          `🟨 Token: <a href="https://gmgn.ai/sol/token/${tokenAddress}">${metadata.json.name}</a> (${metadata.json.symbol})\n`
         sendMessage(message, CHAT_ID);
         sendMessage(message, JUSTIN_CHAT_ID);
       }
+
       if (metadata.json.name.toLowerCase().includes(TARGET_SYMBOL) || metadata.json.symbol.toLowerCase().includes(TARGET_SYMBOL)) {
-        const tokenAddress = tokenMint.toString()
+        const message = 
+          `⏰ ${now()}\n` +
+          `🟥 Strong alert (maybe target): "${metadata.json.symbol}" ("${metadata.json.name}") is issued.\n` +
+          `🟥 Token: <a href="https://gmgn.ai/sol/token/${tokenAddress}">${metadata.json.name}</a> (${metadata.json.symbol})\n`
+        sendMessage(message, CHAT_ID);
+        sendMessage(message, JUSTIN_CHAT_ID);
+      }
+
+      if (metadata.json.name.toLowerCase() == TARGET_SYMBOL || metadata.json.symbol.toLowerCase() == TARGET_SYMBOL) {
         console.log(`${consoleNow()} Name: "${metadata.json.name}", Symbol: "${metadata.json.symbol}"`)
         for (let i = 0; i < 5; i++) {
           const message = 
             `⏰ ${now()}\n` +
-            `🟥🟥 Strong alert! "${metadata.json.symbol}" ("${metadata.json.name}") is issued!\n` +
+            `🟥🟥 Strong alert!! "${metadata.json.symbol}" ("${metadata.json.name}") is issued!\n` +
             `🟥🟥 Token: <a href="https://gmgn.ai/sol/token/${tokenAddress}">${metadata.json.name}</a> (${metadata.json.symbol})\n`
           sendMessage(message, CHAT_ID);
           sendMessage(message, JUSTIN_CHAT_ID);
         }
       }
+
     })
     .catch((error) => {
       console.error(`${consoleNow()} Error fetching metadata: ${error}`)
