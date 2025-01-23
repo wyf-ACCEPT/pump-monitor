@@ -8,7 +8,7 @@ const PUMP_FUN = "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P"
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN_CREATION;
 const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
-const TARGET_SYMBOL = "arg"
+const TARGET_SYMBOL = "argo"
 
 const connection = new Connection(
   process.env.SOLANA_RPC, {
@@ -86,6 +86,14 @@ async function processParsedTransaction(tx) {
 
   metaplex.nfts().findByMint({ mintAddress: tokenMint })
     .then((metadata) => {
+
+      if (metadata.json.name.toLowerCase().includes('arg') || metadata.json.symbol.toLowerCase().includes('arg')) {
+        sendMessage(
+          `⏰ ${now()}\n` +
+          `🟨 Weak alert: "${metadata.json.symbol}" ("${metadata.json.name}") is issued.\n` +
+          `🟨 Token: <a href="https://gmgn.ai/sol/token/${tokenMint.toString()}">${metadata.json.name}</a> (${metadata.json.symbol})\n`
+        )
+      }
       if (metadata.json.name.toLowerCase().includes(TARGET_SYMBOL) || metadata.json.symbol.toLowerCase().includes(TARGET_SYMBOL)) {
         const tokenAddress = tokenMint.toString()
         console.log(`${consoleNow()} Name: "${metadata.json.name}", Symbol: "${metadata.json.symbol}"`)
