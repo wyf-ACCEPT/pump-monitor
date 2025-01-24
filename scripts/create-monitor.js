@@ -1,15 +1,21 @@
 const { Connection, PublicKey, ParsedTransactionWithMeta } = require('@solana/web3.js');
 const { Metaplex } = require('@metaplex-foundation/js')
 const axios = require('axios');
+const { buyToken } = require('./buy');
 require('dotenv').config();
 
 const PUMP_FUN = "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P"
+
+const BUY_AMOUNT = 200_000_000n   // 0.2 SOL
+const SLIPPAGE_BASE_POINT = 2000n   // 20%
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN_CREATION;
 const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 const JUSTIN_CHAT_ID = process.env.JUSTIN_CHAT_ID;
 
 const TARGET_SYMBOL = "argo"
+
+let repeatFlag = 3
 
 const connection = new Connection(
   process.env.SOLANA_RPC, {
@@ -118,6 +124,18 @@ async function processParsedTransaction(tx) {
             `🟥🟥 Token: <a href="https://gmgn.ai/sol/token/${tokenAddress}">${metadata.json.name}</a> (${metadata.json.symbol})\n`
           sendMessage(message, CHAT_ID);
           sendMessage(message, JUSTIN_CHAT_ID);
+        }
+
+        if (repeatFlag > 0) {
+          buyToken(tokenAddress, BUY_AMOUNT, SLIPPAGE_BASE_POINT)
+            .then(tx => {
+              const message = `⏰ ${now()}\n` + 
+                `Buy in: <a href="https://solscan.io/tx/${tx.signature}">${tx.signature}</a>`
+              sendMessage(message, CHAT_ID);
+              sendMessage(message, JUSTIN_CHAT_ID);
+              console.log(`${consoleNow()} Buy in: ${tx.signature}`)
+            })
+          repeatFlag -= 1
         }
       }
 

@@ -32,7 +32,7 @@ function createNewWallet() {
       pubkey: keypair.publicKey.toString(),
       privateKey: Array.from(keypair.secretKey)
     };
-    if (wallet.pubkey.toLowerCase().startsWith('ddd')) {
+    if (wallet.pubkey.toLowerCase().startsWith('pr')) {
       console.log('Wallet created:');
       console.log('Public Key:', wallet.pubkey);
       const privateKeyBase58 = base58Encode(Buffer.from(wallet.privateKey))
