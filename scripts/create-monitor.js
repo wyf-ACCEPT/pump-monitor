@@ -129,6 +129,7 @@ async function processParsedTransaction(tx) {
         if (repeatFlag > 0) {
           buyToken(tokenAddress, BUY_AMOUNT, SLIPPAGE_BASE_POINT)
             .then(tx => {
+              sendMessage(`Buy in finished.`, CHAT_ID);
               const message = `⏰ ${now()}\n` + 
                 `Buy in: <a href="https://solscan.io/tx/${tx.signature}">${tx.signature}</a>`
               sendMessage(message, CHAT_ID);
