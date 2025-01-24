@@ -138,7 +138,7 @@ async function processParsedTransaction(tx) {
             })
             .catch(_ => {
               sendMessage("1st buy-in failed, retrying...", CHAT_ID);
-              buyToken(tokenAddress, BUY_AMOUNT, SLIPPAGE_BASE_POINT * 2)
+              buyToken(tokenAddress, BUY_AMOUNT, SLIPPAGE_BASE_POINT * 3)
                 .then(tx => {
                   sendMessage("2nd buy-in finished.", CHAT_ID);
                   const message = `⏰ ${now()}\n` + 
