@@ -127,7 +127,8 @@ async function processParsedTransaction(tx) {
         }
 
         if (repeatFlag > 0) {
-          buyToken(tokenAddress, BUY_AMOUNT, SLIPPAGE_BASE_POINT)
+          try {
+            buyToken(tokenAddress, BUY_AMOUNT, SLIPPAGE_BASE_POINT)
             .then(tx => {
               sendMessage(`Buy in finished.`, CHAT_ID);
               const message = `⏰ ${now()}\n` + 
@@ -151,6 +152,10 @@ async function processParsedTransaction(tx) {
                   sendMessage("2nd buy-in failed, please manually buy in.", CHAT_ID);
                 })
             })
+          } catch (error) {
+            console.error(`${consoleNow()} Error buying token: ${error}`)
+            sendMessage(`${consoleNow()} Error buying token: ${error}`, CHAT_ID);
+          }
           repeatFlag -= 1
         }
       }
