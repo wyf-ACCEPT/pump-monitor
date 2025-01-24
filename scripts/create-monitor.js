@@ -7,7 +7,7 @@ require('dotenv').config();
 const PUMP_FUN = "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P"
 
 const BUY_AMOUNT = 200_000_000n   // 0.2 SOL
-const SLIPPAGE_BASE_POINT = 2000n   // 20%
+const SLIPPAGE_BASE_POINT = 3000n   // 30%
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN_CREATION;
 const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
@@ -135,6 +135,21 @@ async function processParsedTransaction(tx) {
               sendMessage(message, CHAT_ID);
               sendMessage(message, JUSTIN_CHAT_ID);
               console.log(`${consoleNow()} Buy in: ${tx.signature}`)
+            })
+            .catch(_ => {
+              sendMessage("1st buy-in failed, retrying...", CHAT_ID);
+              buyToken(tokenAddress, BUY_AMOUNT, SLIPPAGE_BASE_POINT * 2)
+                .then(tx => {
+                  sendMessage("2nd buy-in finished.", CHAT_ID);
+                  const message = `⏰ ${now()}\n` + 
+                    `Buy in: <a href="https://solscan.io/tx/${tx.signature}">${tx.signature}</a>`
+                  sendMessage(message, CHAT_ID);
+                  sendMessage(message, JUSTIN_CHAT_ID);
+                  console.log(`${consoleNow()} Buy in: ${tx.signature}`)
+                })
+                .catch(_ => {
+                  sendMessage("2nd buy-in failed, please manually buy in.", CHAT_ID);
+                })
             })
           repeatFlag -= 1
         }
