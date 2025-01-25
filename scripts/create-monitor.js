@@ -92,7 +92,7 @@ async function processParsedTransaction(tx) {
   console.log(`${consoleNow()} Token pubkey: ${tokenMint.toString()}`);
 
   metaplex.nfts().findByMint({ mintAddress: tokenMint })
-    .then((metadata) => {
+    .then(async (metadata) => {
 
       const tokenAddress = tokenMint.toString()
       console.log(`${consoleNow()} Name: "${metadata.json.name}", Symbol: "${metadata.json.symbol}", Address: ${tokenAddress}`)
@@ -128,33 +128,28 @@ async function processParsedTransaction(tx) {
 
         if (repeatFlag > 0) {
           try {
-            buyToken(tokenAddress, BUY_AMOUNT, SLIPPAGE_BASE_POINT)
-            .then(tx => {
-              sendMessage(`Buy in finished.`, CHAT_ID);
+            const tx = await buyToken(tokenAddress, BUY_AMOUNT, SLIPPAGE_BASE_POINT)
+            sendMessage(`Buy in finished.`, CHAT_ID);
+            const message = `⏰ ${now()}\n` + 
+              `Buy in: <a href="https://solscan.io/tx/${tx.signature}">${tx.signature}</a>`
+            sendMessage(message, CHAT_ID);
+            sendMessage(message, JUSTIN_CHAT_ID);
+            console.log(`${consoleNow()} Buy in: ${tx.signature}`)
+          } catch (error) {
+            try {
+              console.error(`${consoleNow()} Error buying token 1: ${error}`)
+              sendMessage("1st buy-in failed, retrying...", CHAT_ID);
+              const tx = await buyToken(tokenAddress, BUY_AMOUNT, SLIPPAGE_BASE_POINT * 3)
+              sendMessage("2nd buy-in finished.", CHAT_ID);
               const message = `⏰ ${now()}\n` + 
                 `Buy in: <a href="https://solscan.io/tx/${tx.signature}">${tx.signature}</a>`
               sendMessage(message, CHAT_ID);
               sendMessage(message, JUSTIN_CHAT_ID);
               console.log(`${consoleNow()} Buy in: ${tx.signature}`)
-            })
-            .catch(_ => {
-              sendMessage("1st buy-in failed, retrying...", CHAT_ID);
-              buyToken(tokenAddress, BUY_AMOUNT, SLIPPAGE_BASE_POINT * 3)
-                .then(tx => {
-                  sendMessage("2nd buy-in finished.", CHAT_ID);
-                  const message = `⏰ ${now()}\n` + 
-                    `Buy in: <a href="https://solscan.io/tx/${tx.signature}">${tx.signature}</a>`
-                  sendMessage(message, CHAT_ID);
-                  sendMessage(message, JUSTIN_CHAT_ID);
-                  console.log(`${consoleNow()} Buy in: ${tx.signature}`)
-                })
-                .catch(_ => {
-                  sendMessage("2nd buy-in failed, please manually buy in.", CHAT_ID);
-                })
-            })
-          } catch (error) {
-            console.error(`${consoleNow()} Error buying token: ${error}`)
-            sendMessage(`${consoleNow()} Error buying token: ${error}`, CHAT_ID);
+            } catch (error2) {
+              sendMessage("2nd buy-in failed, please manually buy in.", CHAT_ID);
+              console.error(`${consoleNow()} Error buying token 2: ${error2}`)
+            }
           }
           repeatFlag -= 1
         }
